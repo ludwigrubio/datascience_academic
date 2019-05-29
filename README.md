@@ -1,4 +1,4 @@
-*# Datascience Academic
+# Datascience Academic
 ##### Notebooks para ciencia de datos.
 
 Bienvenido,	
