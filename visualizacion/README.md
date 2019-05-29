@@ -10,7 +10,9 @@ y archivos, está configurado de esta manera.
 
 El ejecutado el archivo _app.R_ de la carpeta <a href="visualizacion_dinamica">visualizacion_dinamica</a>, permite la re-ejecución del proyecto.
 
-Para subir una versión a <a href="https://www.shinyapps.io/" target="_blanck"> ShinyApp </a> puede consultar la carpeta <a href="visualizacion_dinamica">shiny-mexico</a>
+Para subir una versión a <a href="https://www.shinyapps.io/" target="_blanck"> ShinyApp </a> puede consultar la carpeta <a href="visualizacion_dinamica">shiny-mexico</a>.
+
+Una versión demo puedo ser consultada en <a href="https://ludwigrubio.shinyapps.io/shiny-mexico/">Población en México - Shiny </a>
 
 ## Visualización estática
 
