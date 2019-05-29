@@ -1,0 +1,449 @@
+---
+title: "Población indígena en México"
+author: "Ludwig Gerardo Rubio Jaime"
+output:
+  html_document:
+    toc: false
+    toc_depth: 4
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    css: style.css
+---
+
+```{r setup, include=FALSE}
+#Cargar bibliotecas
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(cowplot)
+#Necesario instalar
+#install.packages("mxmaps")
+library(mxmaps)
+#install.packages("ggrepel")
+library(ggrepel)
+#install.packages("sp")
+library(sp)
+#install.packages("geojsonio")
+library(geojsonio)
+#install.packages("gridExtra")
+library(gridExtra) #Para visualizar gráficas en la misma línea
+library(broom) #Recomendado por función de ggplot que será deprecated
+#install.packages("RColorBrewer")
+library(RColorBrewer)
+
+#Configuramos que las proporciones default de las gráficas sean de 12 x 4 columnas
+knitr::opts_chunk$set(fig.width=12, fig.height=5) 
+
+#Cargar datos
+load(file="../data-variables/first_chart")
+load(file="../data-variables/second_chart")
+load(file="../data-variables/third_chart")
+load(file="../data-variables/fourth_chart")
+load(file="../data-variables/first_map")
+load(file="../data-variables/second_map")
+load(file="../data-variables/third_map")
+load(file="../Preprocesado/Services/points_map")
+
+#Guardando el tema default
+default.theme <- theme_get()
+```
+
+```{r echo=FALSE, label="theme"}
+#Cargamos el tema
+source("theme_ludwig.R")
+
+#Seteamos nuestor tema
+theme_set(theme_ludwig)
+#theme_set(default.theme)
+```
+
+```{r echo=FALSE, label="func_tools"}
+
+#https://stackoverflow.com/questions/34208564/how-to-hide-or-disable-in-function-printed-message-in-r#answer-54136863 by Hadley Wickham
+#Función para no mostrar salidas 
+quiet <- function(x) { 
+  sink(tempfile()) 
+  on.exit(sink()) 
+  invisible(force(x)) 
+} 
+
+#Función para pasar a notcaciones K,M ...
+f2si<-function (number, rounding=F, digits=ifelse(rounding, NA, 6)) 
+{
+    lut <- c(1e-24, 1e-21, 1e-18, 1e-15, 1e-12, 1e-09, 1e-06, 
+        0.001, 1, 1000, 1e+06, 1e+09, 1e+12, 1e+15, 1e+18, 1e+21, 
+        1e+24, 1e+27)
+    pre <- c("y", "z", "a", "f", "p", "n", "u", "m", "", "k", 
+        "M", "G", "T", "P", "E", "Z", "Y", NA)
+    ix <- findInterval(number, lut)
+    if (ix>0 && ix<length(lut) && lut[ix]!=1) {
+        if (rounding==T && !is.numeric(digits)) {
+            sistring <- paste(round(number/lut[ix]), pre[ix])
+        }
+        else if (rounding == T || is.numeric(digits)) {
+            sistring <- paste(signif(number/lut[ix], digits), pre[ix])
+        }
+        else {
+            sistring <- paste(number/lut[ix], pre[ix])
+        } 
+    }
+    else {
+        sistring <- as.character(number)
+    }
+    return(sistring)
+}
+
+```
+
+### Introducción
+
+Con frecuencia escuchamos sobre la riqueza natural de México, el quinto país más biodiverso del mundo, escuchamos sobre sus playas y sobre su historia y tradiciones, pero pocas veces se habla de su riqueza multicultural y ancestral presente, de sus más de __69 lenguas indígenas__ que son tan diferentes entre ellas como el chino lo es del castellano, de sus __364 variantes lingüísticas__, y de que en México respecto el último censo oficial (INEGI, 2010), viven tantas personas que se auto-reconocen como indígena, que representan más de __dos veces la actual población de Madrid, España__.
+
+###Contexto Histórico (1990-2010)
+
+####Nacional
+
+En el año de 1990, México contaba con cerca de 80 millones de habitantes, y de acuerdo a datos de las Naciones Unidas, su índice de desarrollo humano era de 0.65. En contraste 20 años después, la población de México era de aproximadamente de 120 millones de habitantes y su nivel de desarrollo humano había mejorado de manera paulatina durante dicho período. 
+
+Pero… ¿Qué sucede con la población indígena durante este período? Poco se habla de lo que sucede con los pueblos originarios en México, y solo en el año de 1994, con la apertura económica neoliberal del país, se les miró por su postura en oposición a los tratados de libre comercio.
+
+Durante el período de 1990 a 2010, la población indígena no ha disminuido, al contrario, ha ido en crecimiento, sin embargo, la proporción de los pueblos originarios respecto a la población no indígena ha disminuido de forma considerable, y alcanza la cantidad de 7 millones de habitantes aproximadamente en el año de 2010.
+
+```{r echo=FALSE, label="graph_1_2"}
+#-----------------------
+# G R Á F I C O    I
+#-----------------------
+
+#Aplicamos un gather para el gráficado
+total_idh <- total_pg_pi_idh %>% gather(type_pob, pob,-idh, -year) %>% arrange(desc(type_pob))
+
+#Creamos secuencia de 5 valores
+y.values <- seq(0, max(total_idh$pob), max(total_idh$pob)/5) #Creamos una secuencia desde 0 hasta el máximo dividida en 5
+y.labels <- sapply(y.values, function(x) {
+                f2si(x,rounding = T) #Aplicamos nuestra función para redondear los valores y añadir notación K, M, etc.
+            })
+
+g1 <- ggplot(total_idh, aes(x=year, y=pob, fill=idh)) + #Años vs Población, IDH como color
+  geom_bar(stat='identity', position=position_dodge()) + #Separamos en dos columnas con dodge
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Población en Millones", expand = c(0.01, 0.1)) + #Cambiamos valores por los cálculados, y cambiamos etiqueta
+  scale_x_discrete(name="Año") + #cambiamos nombres de eje x 
+  scale_fill_gradient(low="#9FA8DA", high="#303F9F") + #Cambiamos los colores por una escala continua de colores azules
+  guides (fill = guide_colourbar(title ="IDH", title.vjust = 1, barwidth=10)) + #Cambiamos título del legend y fijamos tamaño de la barra
+  labs(caption = "Índice de desarrollo humano en México - ONU / INEGI") + #Agregamos una nota descriptiva para el gráfico
+  theme(legend.position="bottom") #Cambiamos la posición de la leyenda
+
+#-----------------------
+# G R Á F I C O    II
+#-----------------------
+
+#Restamos a población en general la población indigena
+total_pg_pi_idh$pni <- total_pg_pi_idh$pni - total_pg_pi_idh$pi
+
+#Aplicamos un gather para el gráficado
+total_pg_pi_idh <- total_pg_pi_idh %>% gather(type_pob, pob,-idh, -year) %>% arrange(desc(type_pob))
+
+#Factorizando el tipo de población y etiquetamos
+total_pg_pi_idh$type_pob <- factor(total_pg_pi_idh$type_pob, label=c("Indígena","No Indígena"))
+
+y.values <- seq(0, max(total_pg_pi_idh$pob), max(total_pg_pi_idh$pob)/5)
+y.labels <- sapply(y.values, function(x) {
+                f2si(x,rounding = T)
+            })
+
+g2<- ggplot(total_pg_pi_idh, aes(x=year, y=pob, fill=type_pob)) + #Rellenamos por tipo de población
+  geom_bar(stat='identity', position=position_dodge()) + #separamos en dos columnas con dodge
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Población en Millones", expand = c(0.01, 0.1)) + 
+  scale_fill_manual(values = c("#E91E63","#00BCD4")) +
+  scale_x_discrete(name="Año") +
+  guides(fill=guide_legend("Tipo de población")) +
+  labs(caption = "Población indígena en México - INEGI") +
+  theme(legend.position="bottom")
+
+ grid.arrange(g1, g2, ncol=2) #Renderizamos ambas gráficas en un solo row
+```
+
+
+Al mismo tiempo que la proporción de indígenas ha disminuido respecto a la población no indígena durante estos 20 años, la pirámide poblacional del país ha cambiado considerablemente, cada vez nacen menos niños, y la población joven y adulta es cada vez mayor.
+
+
+```{r echo=FALSE, label="graph_3"}
+#-----------------------
+# G R A F I C O    III
+#-----------------------
+
+ggplot(data = pyramid_year, 
+       mapping = aes(x = range, fill = gender, 
+                     y = ifelse(test = gender == "Mujeres", 
+                                yes = -population, no = population))) + #Si es mujer lo mandamos al lado derecho como valor negativo
+        geom_bar(stat = "identity") +
+        scale_y_continuous(labels=function(x) paste0(abs(x),"%")) + #Cambiamos los valores a absolutos para que los negativos no tengan el signo.
+        scale_fill_manual(values = c("#00BCD4","#9C27B0")) + #Cambiamos los colores de fill
+        labs(y = "Población", x = "Rango de edades") + #cambiamos nombres de los ejes 
+        guides(fill=guide_legend("Género")) + #Camviamos nombre de la leyenda
+       coord_flip() + #Rotamos los ejes de coordeandas para que parezca una pirámide
+        facet_wrap(~year, ncol = 5) + #Facet por años
+        labs(caption = "Pirámide poblacional en México - INEGI") + #Añadimos descripción de la gráfica
+        theme(legend.position="bottom") #Pasamos al fondo la leyenda
+```
+
+
+####Por Entidad Federativa
+
+
+México es un país diverso y con una extensión territorial muy extensa, hablar de los pueblos indígenas en el estado de Nuevo León, es muy distinto a la población del estado de Oaxaca, donde la cantidad de población indígena llegó a representar cerca del 50% de su población en el año 1990.
+
+
+Lo que se puede describiren común entre ellos y el contexto nacional es que no existe un solo estado que no replique el comportamiento nacional, donde durante este período de 20 años, disminuyó de manera proporcional la cantidad de habitantes indígenas en proporción a los habitantes no indígenas.
+
+```{r echo=FALSE, label="graph_4"}
+#Población en general menos indígena para hacerlo población no indígena
+pob_edo_gm$pg <- pob_edo_gm$pg - pob_edo_gm$pi  
+
+#Agrupamos por año y creamos un campo rank con el total de población indígena
+pob_edo_type <- pob_edo_gm %>% group_by(year) %>%
+  mutate(rank = rank(desc(pi))) %>%
+  arrange(-pi)
+
+#Utilizado en el próximo gráfico
+pob_edo_type_gm <- pob_edo_type
+
+#Filtramos los primeros 10 lugares de cada año
+pob_edo_type<- pob_edo_type[pob_edo_type$rank<11,] %>% arrange(year, rank)
+
+#Gather para juntar los dos tipos de población
+pob_edo_type <- gather(pob_edo_type, type_pob, pob, -ent, -cve_ent, -gm, -year, -rank)
+
+#Renombramos para su visualización
+pob_edo_type$type_pob <- factor(pob_edo_type$type_pob, labels = c("No indígena","Indígena"))
+
+#Desagrupamos
+pob_edo_type <- pob_edo_type%>% ungroup()
+
+y.values <- seq(0, max(pob_edo_type$pob), max(pob_edo_type$pob)/5)
+y.labels <- sapply(y.values, function(x) {
+                f2si(x,rounding = T)
+            })
+
+ggplot(pob_edo_type, aes(x=ent, y=pob, fill=type_pob)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Población en Millones", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Entidad Federativa") +
+  scale_fill_manual(values = c("#E91E63","#00BCD4")) +
+  guides(fill=guide_legend("Tipo de población"))+
+  facet_wrap(~year, ncol = 5) +
+  labs(caption = "10 estados con mayor población indígena en México - INEGI") +
+  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+En México, el INEGI, genera un indicador llamado _índice de marginación_, que toma en cuenta el acceso a servicios de salud, educación, vivienda y calidad de vida en general, que suele asociarse a la pobreza y marginación de los pueblos. Dicho índice suele representarse en 5 categorías llamadas _grados de marginación_, siendo la que indica mayor acceso a servicios y vivienda el grado _Muy bajo_, y siendo el peor de los casos _Muy alto_.
+
+Es bien conocido que los pueblos indígenas han sufrido de una marginación económica durante el desarrollo del México moderno, y esto se ve reflejado en que los estados con mayor población indígena, son los mismos que tienen un grado de marginación _Muy alto_, o _Alto_, situación que no permite su desarrollo y libertad para adaptarse a las cambiantes dinámicas del país y el mundo.
+
+De los 10 estados con mayor población indígena, ninguna alcanzó en el año 2010 un grado de marginación _Muy bajo_, y salvo en el 2005 donde dos 2 estados tenían un grado de amrginación _Bajo_, solo 1 de los 10 estados (Estado de México), logró el nivel de grado de marginación _Bajo_, asociado sobre todo a su cercanía a la capital de país y el desarrollo de oportunidades en la región.
+
+```{r echo=FALSE , label="grpah_5"}
+#Filtramos los primeros 10 de cada añO
+pob_edo_type_gm <- pob_edo_type_gm[pob_edo_type_gm$rank<11,c("year","ent","gm","pi","rank")]
+
+#Creamos nuestro propia escala con respecto a los colores recomendados por INEGI
+myColors <- c("#A71E4A","#EE3425","#F15523","#F99B20","#F3EC3A")
+names(myColors) <- levels(pob_edo_type_gm$gm)
+
+y.values <- seq(0, max(pob_edo_type_gm$pi), max(pob_edo_type_gm$pi)/5)
+y.labels <- sapply(y.values, function(x) {
+                f2si(x,rounding = T)
+            })
+
+ggplot(pob_edo_type_gm, aes(x=ent, y=pi, fill=gm)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_fill_manual(values = myColors) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Población indígena en millones", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Entidad Federativa") +
+  guides(fill=guide_legend("Grado de Marginación")) +
+  labs(caption = "Grado de Marginación de los 10 estados con mayor población indígena en México con - INEGI") +
+  facet_wrap(~year, ncol = 5) +
+  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1)) #Rotamos las eqtiquetas para su mejor lectura
+
+```
+
+###Actualidad (2010)
+
+
+####Por Entidad Federativa
+
+En el año 2010, año del último censo oficial, el sur de México era la zona más habitada por población indígena, llegando a conservar en alguno estados, aproximadamente una proporción de 30% en contraste con la población no indígena.
+
+```{r echo=FALSE, message=FALSE, label="map_1", fig.width=12, fig.height=8}
+
+#Renderizamos el mapa
+mxstate_choropleth(map_states, num_colors = 1) + #Reutilizamos paquete basado en ggplot2
+  scale_fill_gradient(low="#EC407A", high="#880E4F") + #Cambiamos de escala de colores
+  guides (fill = guide_colourbar(title ="% población indígena")) + #Añadimos descripción a legend
+  labs(caption = "Porcentaje de población indígena por estado en 2010 - INEGI") + #Texto descriptivo caption
+  geom_text_repel(data = map_states, aes(lon, lat, label = state_abbr), color = "white", size = 3, box.padding = unit(0, 'lines'), force = 0.1) #Añadir nombre corto de los estados, en el centroide previamente calculado y añadido en el set map_states
+```
+
+La ONU, en dicho año, realizó un esfuerzo conjunto con el gobierno del país para incluir en el censo la generación de un índice de desarrollo humano especial para los pueblos indígenas, que permitió concoer que no sólo existe una relación entre el índice de desarrollo de un estado y su población indígena, si no que las poblaciones indígenas de la mayoría de los estados tienen una peor calidad de vida que la población no indígena.
+
+```{r, echo=FALSE, message=FALSE, label="map_2"}
+
+#Mezclamos ambos idh, para tener min y max más facilmente
+rng <- gather(map_state_idh[,c("idh","idhi")], type, value)
+
+#Creamos escala fija para poder comparar ambos mapas con el mismo rango de valores
+scale_fixed <- 
+  scale_fill_gradient(low="red", high="#0b1150", 
+                       limits=c(min(rng$value),max(rng$value)))
+
+#Mostramos el valor del índice de desarrollo humano
+map_state_idh$value <-map_state_idh$idh
+
+#Renderizamos el mapa
+maprender_idh <- mxstate_choropleth(map_state_idh, num_colors = 1) +
+  scale_fixed +
+  guides (fill = guide_colourbar(title ="IDH")) + #Añadir descripción a legend
+  labs(caption = "Índice de desarrollo humano en 2010 - INEGI") +
+  geom_text_repel(data = map_state_idh, aes(lon, lat, label = state_abbr),color = "white", size = 2, box.padding = unit(0.1, 'lines'), force = 0.1) #Capa de texto con el nombre de los estados
+
+#Mostramos el valor del índice de desarrollo humano para los pueblos indígenas
+map_state_idh$value <-map_state_idh$idhi
+
+maprender_idhi <- mxstate_choropleth(map_state_idh, num_colors = 1) +
+  scale_fixed +
+  guides (fill = guide_colourbar(title ="IDH Indígena")) + #Añadir descripción a legend
+  labs(caption = "Índice de desarrollo humano indígena en 2010 - INEGI") +
+  geom_text_repel(data = map_state_idh, aes(lon, lat, label = state_abbr),color = "white", size = 2, box.padding = unit(0.1, 'lines'), force = 0.1) #Capa de texto con el nombre de los estados
+
+grid.arrange(maprender_idh, maprender_idhi, ncol = 2)
+```
+
+####Por Lengua Indígena
+
+Pero hablar de los pueblos indígenas como una misma unidad, resulta imposible cuando se conoce su contexto cultural, lingüístico, y geográfico, los pueblos se encuentran en regiones muy distantes unos de otros, tiene expresiones culturales y formas de vida muy distintas, así como en contraste, la convivencia de múltiples pueblos ha desdibujado diferencias entre ellos y ha dado paso a nuevas expresiones culturales.
+
+Es entonces que la lengua se convierte en una forma de poder recabar información que se pueda contrastar, una herramienta utilizada con frecuencia por los antropólogos al ser el elemeto cultural que más fácilmente se puede organizar de forma taxonómica, entendiendo que de cualquier forma siempre existen diferencias significativas despendiendo la región y comunidad que la habla.
+
+
+```{r echo = FALSE, label="map_3", fig.width=12, fig.height=8}
+
+#Escala de colores respecto al órden de los factores
+gmColors <- c("#212121","#424242","#616161","#757575", "#9E9E9E")
+
+#Contador de colores a crear
+colourCount = length(unique(map_state_gm_pi$group))
+
+
+ggplot() +
+  geom_polygon(data = map_state_gm_pi,
+               aes( x = long, y = lat, group = group, fill=gm), #Añadimos la capa preprocesada
+               color ="#d3d3d3") + #Añadimos capa base por estado
+  scale_fill_manual(values = gmColors) + #Ponemos nuestra paleta de grises
+  geom_point(data = points_map,
+             aes(x = longitude, y=latitude, color=comunity), #Añadimos las comunidades
+             alpha=0.08, size=.8) + 
+  #scale_color_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(colourCount)) +
+  guides(fill=guide_legend("Grado de marginación"), #Cambiamos la leyenda
+         color=guide_legend(title = "Comunidades indígenas por lengua",
+                            override.aes=list(size=5, alpha=1))) + #Sobreescribimos para los guides
+  labs(caption="Grado de marginación por estado y comunidades indígenas por lengua en 2010 - INEGI") +
+  coord_quickmap() + #Proyección esferica a 2D
+  theme_void() + #Quitamos axis, fondo, etc.
+  theme( plot.caption = element_text(hjust = 0))
+```
+
+Es claro que el centro y sur del país concentran la mayor cantidad de comunidades indígenas, y que salvo en casos particulares como el del estado de Chihuahua al norte, o el estado de Puebla en el centro del país, los estados con mayor presencia de comunidades indígenas tienen de _Alto_ a _Muy alto_ grado de marginación.
+
+En 2010 los hablantes del Náhuatl eran cerca de 3 millones de personas, seguidos por los hablantes del maya con cerca de 1.5 millones de personas, mientras que algunos pueblos indígenas contaban con apenas cerca de 50 hablantes.
+
+El acceso a servicio básicos como los son servicios de salud, agua potable, electricidad o acceso a internet son muy distintos para cada uno de ellos, por ejemplo:
+
+Mientras que cerca del 40% los hablantes de Náhuatl tienen acceso a servicios de salud, el caso de los hablantes de maya está cercano al 20%, esto puede deberse a que la mayoría de los hablantes del Náhuatl se encuentran en la zona centro del país, y los servicios de salud llegan con mayor facilidad debido a las políticas centralistas de los gobiernos, en contraste con los hablantes del maya que se encuentran en el sur de México, donde el acceso a servicio proveídos por el gobierno es más bajo. 
+
+
+```{r echo = FALSE, label="graph_6_1"}
+#Creamos secuencia de 5 valores
+y.values <- seq(0, max(pob_ci$pi), max(pob_ci$pi)/5)
+y.labels <- sapply(y.values, function(x) {
+  f2si(x,rounding = T, digits=2)
+})
+
+ggplot(pob_ci, aes(x=comunity, y=pi, fill = pob_ci$SINDERHAB)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Hablantes", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Lengua indígena") +
+  scale_fill_gradient(low="#1B5E20", high="#A5D6A7") +
+  guides (fill = guide_colourbar(title ="% de hablantes sin acceso a servicios de salud" ,
+                                 title.position = "top",
+                                 title.vjust = 1,
+                                 barwidth=20,
+                                 label.position = "bottom")) +  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+En cuanto al acceso de agua potable, la ubicación geográfica de los hablantes podría jugar un papel importante y contrastante a los servicios de salud, ya que en el sur de México existen una variada y rica fuente de agua, al mismo tiempo que la población es mucho menor a la que habita el centro del país, donde además las fuentes de agua son más escasas.
+
+
+```{r echo = FALSE, label="graph_6_2"}
+ggplot(pob_ci, aes(x=comunity, y=pi, fill = pob_ci$VCONAGUA)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Hablantes", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Lengua indígena") +
+  scale_fill_gradient(low="#81D4FA", high="#01579B") +
+  guides (fill = guide_colourbar(title ="% hogares con acceso a agua potable" ,
+                                 title.position = "top",
+                                 title.vjust = 1,
+                                 barwidth=20,
+                                 label.position = "bottom")) +
+  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+En el caso de la electricidad, se observa un comportamiento distinto, ya que la Comisión Federal de Electricidad si ha llegado a zonas muy marginadas y aisladas, los hablantes de las lenguas indígenas en su mayoría cuentan con un cercano 100% de población con acceso a electricidad, exceptuando algunos casos de comunidades que viven en las altas sierras del país como lo son los Purépechas y los Tarahumaras.
+
+
+```{r echo = FALSE, label="graph_6_3"}
+ggplot(pob_ci, aes(x=comunity, y=pi, fill = pob_ci$VCONELE)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Hablantes", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Lengua indígena") +
+  scale_fill_gradient(low="#FFCC80", high="#E65100") +
+  guides (fill = guide_colourbar(title ="% hogares con acceso a electricidad" ,
+                                 title.position = "top",
+                                 title.vjust = 1,
+                                 barwidth=20,
+                                 label.position = "bottom")) +
+  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+En contraste, muy poco porcentaje de población de los hablantes de cada lengua indígena cuentan con acceso a internet. En todos los casos es menor al 10% de la población hablante, siendo aquellos hablantes como los Mayas y Zapotecas los que tiene mayor acceso, debido quizá a dos factores: El apoyo internacional hacia los pueblos del sur de México, y a su cercanía a destinos de turismo internacional.
+
+
+```{r echo = FALSE, label="graph_6_4"}
+ggplot(pob_ci, aes(x=comunity, y=pi, fill = pob_ci$VCONINTER)) +
+  geom_bar(stat='identity', position=position_dodge()) +
+  scale_y_continuous(breaks = y.values, labels = y.labels, name = "Hablantes", expand = c(0.01, 0.1)) +
+  scale_x_discrete(name="Lengua indígena") +
+  scale_fill_gradient(low="#B39DDB", high="#311B92") +
+  guides (fill = guide_colourbar(title ="% hogares con acceso a internet" ,
+                                title.position = "top",
+                                title.vjust = 1,
+                                barwidth=20,
+                                label.position = "bottom"))+
+  theme(legend.position="bottom", axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+De esta manera es como los datos de distintas fuentes oficiales nos han permitido conocer el desarrollo y estado de los pueblos indígenas en México; nos permiten exponer y contrastar que las condiciones de vida y derechos de este sector poblacional en México, no están regidas en el marco de la igualdad y el respeto a los derechos de acceso a servicios y mejoramiento de la calidad de vida.
+
+
+```{r echo=FALSE, label="back_theme"}
+#Regresando el tema original.
+theme_set(default.theme)
+```
