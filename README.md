@@ -7,6 +7,8 @@ En este repositorio encontrarás algunos notebooks prácticos, principalmente de
 
 ### Visualización - Storytelling <code>R</code>	
 
+ #### <a href="visualizacion/README.md"> Población indígena en México.</a> 	
+
 Extracción, limpieza y organización de distintas fuentes de información para la creación de gráficos estáticos y dinámicos
 acerca de la población general en México haciendo énfasis la riqueza cultural de la población indígena en México y la falta de accesos
 a derechos básicos.
