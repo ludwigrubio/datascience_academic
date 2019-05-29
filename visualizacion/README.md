@@ -1,24 +1,18 @@
-# Datascience Academic
-##### Notebooks para ciencia de datos.
-
-Bienvenido,
-
-En este repositorio encontrarás algunos notebooks prácticos, principalmente desarrollados en __R__ y __Python__, con tematicas relacionadas a la ciencia e ingeniería de datos.
+# Visualización estática y dinámica con R
 
 
-
-### Visualización - Storytelling <code>R</code>
-
-#### Población indígena en México.
-
-Extracción, limpieza y organización de distintas fuentes de información para la creación de gráficos estáticos y nota periodística.
+Para la correcta re-ejecución de los procesos de extracción, limpieza y visualización dinámica
+utilizar este nivel como working directory en R-Studio, ya que todo la estructura de dependecias de variables
+y archivos, está configurado de esta manera.
 
 
+## Visualización estática
 
-### Análisis multivariante <code>R</code>
+El ejecutado el archivo _app.R_ de la carpeta <a href="visualizacion_dinamica">visualizacion_dinamica</a>.
 
+## Visualización dinámica
 
-#### <a href="analisis_multivariante/indice_calentamiento_global.md">Índice de aporte al calentamiento global por país.</a> 
+En el caso del archivo R-Mardown del la visualización estática, la llamada a los archivos se hace de forma
+relativa al archivo (_Población-México.RMD_).
 
-Extracción, limpieza y organización de información para la creación de un análisis multivariante detallado con uso de algoritmos __PCA__ y __Factor Analysis__.
-
+Puede ser consultado <a href=" https://datalud.com/articulo/poblacion-indigena-traves-de-los-datos" target="_blank">datalud</a>
