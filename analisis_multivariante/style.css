@@ -1,0 +1,65 @@
+/*
+Autor: Ludwig Rubio
+*/
+
+/*Headers*/
+h1, h2, h3 {
+
+  margin-top: 25px;
+  margin-bottom: 20px;
+}
+h4, h5, h6 {
+  margin-top: 22px;
+  margin-bottom: 17px;
+}
+h4{
+	border-bottom: 2px solid #009688;
+	padding-bottom: 5px;
+}
+h4.author, h4.date{
+	border: none;
+	font-size: 12px;
+	margin: 10px 0px;
+}
+
+/*Colors*/
+#tocify-header0 .active, .list-group-item.active{
+	background:#009688 !important;
+}
+
+a{
+	color: #009688;
+}
+
+/*Pre*/
+pre{
+	border-radius: 0px;
+}
+pre.r{
+	background: #EFEBE9;
+}
+
+.tabset{
+	margin-top: 20px;
+	border: 1px solid #ddd !important;
+	padding: 0px 20px 10px 20px;
+}
+
+img{
+	width: 100%;
+}
+.nav-tabs>li>a{
+	background: #9abdba;
+	color: white;
+}
+
+.nav-tabs>li.active>a, .nav->li.active>a:focus{
+	background: #009688;
+    color: white;
+}
+.nav-tabs>li>a:hover{
+	color: #999;
+}
+.tocify {
+    border-radius: 1px !important;
+}
