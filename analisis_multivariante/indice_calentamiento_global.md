@@ -37,8 +37,16 @@ Para ver más detalles de la selección de variables, se pueden consultar los ar
 ``` r
 # Claves por base temática
 wdb_pob <- c("SP.RUR.TOTL.ZS","SP.POP.TOTL","SP.URB.TOTL.IN.ZS");
-wdb_develop <- c("NY.ADJ.SVNG.CD","EN.ATM.METH.AG.ZS","NV.AGR.TOTL.CD","ER.H2O.FWTL.ZS","NV.MNF.CHEM.ZS.UN","EG.USE.CRNW.ZS","EN.CLC.DRSK.XQ","EN.ATM.METH.EG.ZS","TX.VAL.FOOD.ZS.UN","EG.USE.COMM.FO.ZS","TX.VAL.MANF.ZS.UN","EN.ATM.METH.ZG","MS.MIL.XPND.GD.ZS","IT.CEL.SETS","SE.SEC.ENRR")
-wdb_economic <- c("EG.CFT.ACCS.ZS","IS.AIR.GOOD.MT.K1","ER.H2O.FWTL.ZS","EN.ATM.CO2E.PC","EN.CLC.MDAT.ZS","NY.GDP.PCAP.CD","SH.MLR.INCD.P3","AG.LND.FRST.ZS","ER.MRN.PTMR.ZS","SH.STA.ODFC.ZS","IS.RRS.PASG.KM","SL.AGR.EMPL.ZS","SL.IND.EMPL.ZS")
+wdb_develop <- c("NY.ADJ.SVNG.CD","EN.ATM.METH.AG.ZS","NV.AGR.TOTL.CD",
+                 "ER.H2O.FWTL.ZS","NV.MNF.CHEM.ZS.UN","EG.USE.CRNW.ZS",
+                 "EN.CLC.DRSK.XQ","EN.ATM.METH.EG.ZS","TX.VAL.FOOD.ZS.UN",
+                 "EG.USE.COMM.FO.ZS","TX.VAL.MANF.ZS.UN","EN.ATM.METH.ZG",
+                 "MS.MIL.XPND.GD.ZS","IT.CEL.SETS","SE.SEC.ENRR")
+wdb_economic <- c("EG.CFT.ACCS.ZS","IS.AIR.GOOD.MT.K1","ER.H2O.FWTL.ZS",
+                  "EN.ATM.CO2E.PC","EN.CLC.MDAT.ZS","NY.GDP.PCAP.CD",
+                  "SH.MLR.INCD.P3","AG.LND.FRST.ZS","ER.MRN.PTMR.ZS",
+                  "SH.STA.ODFC.ZS","IS.RRS.PASG.KM","SL.AGR.EMPL.ZS",
+                  "SL.IND.EMPL.ZS")
 wdb_columns <-  c(wdb_pob , wdb_develop, wdb_economic)
 
 # Filtro por 2016, y sin datos extra (Latitud, Longitud, etc.)
@@ -48,9 +56,11 @@ wdb_data <- WDI(indicator = wdb_columns , start = 2016, end = 2016, extra = F)
 #### Global Health Observatory Data
 
 ``` r
-# Obtenemos todos los códigos para realizar exploración sobre las variables seleccionadas previamente
+# Obtenemos todos los códigos para realizar exploración sobre las variables 
+#seleccionadas previamente
 #modes <- get_codes()
-who_columns <-  c("SDGPM25", "AIR_41", "AIR_7", "SDGPOLLUTINGFUELS", "SDGPOISON", "MH_12", "WHOSIS_000002");
+who_columns <-  c("SDGPM25", "AIR_41", "AIR_7", "SDGPOLLUTINGFUELS",
+                  "SDGPOISON", "MH_12", "WHOSIS_000002");
 SDGPM25<-get_data('SDGPM25')
 AIR_41<-get_data('AIR_41')
 AIR_7<-get_data('AIR_7')
@@ -72,12 +82,14 @@ Comenzaremos por limpiar cada variable proveniente de WHO, nuestro objetivo fina
 
 ``` r
 # Separando regiones para posibles consultas y agrupamientos
-region_country = SDGPM25[! (is.na(SDGPM25$region) |  is.na(SDGPM25$country)),c("region","country")]
+region_country = SDGPM25[! (is.na(SDGPM25$region) |  is.na(SDGPM25$country)),
+                         c("region","country")]
 region_country = region_country[!duplicated(region_country$country),]
 
 # Quitando valores globales de mundo,regiones, etc. 
 SDGPM25_clean = SDGPM25[!is.na(SDGPM25$country),]
-SDGPM25_clean = SDGPM25_clean[SDGPM25_clean$residenceareatype == "Total",c("country","value")]
+SDGPM25_clean = SDGPM25_clean[SDGPM25_clean$residenceareatype == "Total",
+                              c("country","value")]
 
 # Removiendo intervalos de confianza
 SDGPM25_clean$value = str_split_fixed(SDGPM25_clean$value, " ", 2)[,1]
@@ -86,7 +98,8 @@ SDGPM25_clean$value = str_split_fixed(SDGPM25_clean$value, " ", 2)[,1]
 ##### Ambient air pollution attributable deaths
 
 ``` r
-# Filtrando por el total de enfermedades y para ambos sexos ya que no es el objetivo hacerlo por género.
+# Filtrando por el total de enfermedades y para ambos sexos ya que no es el
+#objetivo hacerlo por género.
 AIR_41_clean = AIR_41[AIR_41$sex == "Both sexes" & AIR_41$envcause == "Total",]
 AIR_41_clean = AIR_41_clean[,c("country","value")]
 
@@ -97,7 +110,8 @@ AIR_41_clean$value = str_split_fixed(AIR_41_clean$value, " ", 2)[,1]
 ##### Ambient air pollution attributable DALYs
 
 ``` r
-# Filtrando por el total de enfermedades y para ambos sexos ya que no es el objetivo hacerlo por género.
+# Filtrando por el total de enfermedades y para ambos sexos ya que no es el
+#objetivo hacerlo por género.
 AIR_7_clean = AIR_7[AIR_7$sex == "Both sexes" & AIR_7$envcause == "Total",]
 AIR_7_clean = AIR_7_clean[,c("country","value")]
 
@@ -105,15 +119,17 @@ AIR_7_clean = AIR_7_clean[,c("country","value")]
 AIR_7_clean$value = str_split_fixed(AIR_7_clean$value, " ", 2)[,1]
 ```
 
-##### Proportion of population with primary reliance on clean fuels and technologies (%)
+##### Proportion of population with primary reliance on clean fuels (%)
 
 ``` r
 # Eliminamos aquellos registros con país como valor nulo y filtramos por año 2016
-SDGPOLLUTINGFUELS_clean = SDGPOLLUTINGFUELS[ (!is.na(SDGPOLLUTINGFUELS$country) & SDGPOLLUTINGFUELS$year == 2016) ,]
+SDGPOLLUTINGFUELS_clean = SDGPOLLUTINGFUELS[(!is.na(SDGPOLLUTINGFUELS$country) 
+                                             & SDGPOLLUTINGFUELS$year == 2016),]
 # Filtramos solo el país y el valor deseado.
 SDGPOLLUTINGFUELS_clean = SDGPOLLUTINGFUELS_clean[,c("country","value")]
 
-# Paso lo valores de menor o mayor a su valor tope, para poder ser procesado, aunque exisita perdida de información no tenemos muchas opciones.
+# Paso lo valores de menor o mayor a su valor tope, para poder ser procesado,
+# aunque exisita perdida de información no tenemos muchas opciones.
 SDGPOLLUTINGFUELS_clean$value[SDGPOLLUTINGFUELS_clean$value == "<5"] <- "5"
 SDGPOLLUTINGFUELS_clean$value[SDGPOLLUTINGFUELS_clean$value == ">95"] <-  "95"
 # Aplico NA a los valores faltantes
@@ -123,8 +139,10 @@ SDGPOLLUTINGFUELS_clean$value[SDGPOLLUTINGFUELS_clean$value == "No data"] <- NA
 ##### Mortality rate attributed to unintentional poisoning (per 100 000 population)
 
 ``` r
-# Eliminamos aquellos registros con país como valor nulo y filtramos por año 2016 y valor "ambos sexos"
-SDGPOISON_clean = SDGPOISON[ (!is.na(SDGPOISON$country) & SDGPOISON$year == 2016 & SDGPOISON$sex == "Both sexes") ,]
+# Eliminamos país como valor nulo y filtramos por año 2016 y valor "ambos sexos"
+SDGPOISON_clean = SDGPOISON[ (!is.na(SDGPOISON$country)
+                              & SDGPOISON$year == 2016
+                              & SDGPOISON$sex == "Both sexes") ,]
 # Filtramos solo el país y el valor deseado.
 SDGPOISON_clean = SDGPOISON_clean[,c("country","value")]
 ```
@@ -133,7 +151,8 @@ SDGPOISON_clean = SDGPOISON_clean[,c("country","value")]
 
 ``` r
 # Quitamos valores nulos en país y filtramos por ambos sexos y el año 2016
-MH_12_clean = MH_12[ (!is.na(MH_12$country)) & MH_12$sex == "Both sexes" & MH_12$year == 2016, ]
+MH_12_clean = MH_12[ (!is.na(MH_12$country)) & MH_12$sex == "Both sexes"
+                     & MH_12$year == 2016, ]
 # Filtramos sólo el país y el valor de taza de suicidios
 MH_12_clean = MH_12_clean[,c("country","value")]
 ```
@@ -142,7 +161,9 @@ MH_12_clean = MH_12_clean[,c("country","value")]
 
 ``` r
 # Quitamos valores nulos en país y filtramos por ambos sexos y el año 2016
-WHOSIS_000002_clean = WHOSIS_000002[ (!is.na(WHOSIS_000002$country)) & WHOSIS_000002$sex == "Both sexes" & WHOSIS_000002$year == 2016, ]
+WHOSIS_000002_clean = WHOSIS_000002[ (!is.na(WHOSIS_000002$country))
+                                     & WHOSIS_000002$sex == "Both sexes" 
+                                     & WHOSIS_000002$year == 2016, ]
 # Filtramos sólo el país y el valor de taza de suicidios
 WHOSIS_000002_clean = WHOSIS_000002_clean[,c("country","value")]
 ```
@@ -153,7 +174,9 @@ Una vez realizado nuestro proceso de limpieza, vamos a unificar las variables en
 
 ``` r
 # Añadimos todas las variables a una lista
-who_variables <- list( SDGPM25_clean, AIR_41_clean, AIR_7_clean, SDGPOLLUTINGFUELS_clean, SDGPOISON_clean, MH_12_clean, WHOSIS_000002_clean)
+who_variables <- list( SDGPM25_clean, AIR_41_clean, AIR_7_clean,
+                       SDGPOLLUTINGFUELS_clean, SDGPOISON_clean,
+                       MH_12_clean, WHOSIS_000002_clean)
 
 # Renombramos el nombre de su columna value, para pdoer hacer un merge
 for (index in seq(1,7)) {
@@ -161,7 +184,8 @@ for (index in seq(1,7)) {
 }
 
 # Merge todas nuestras variables
-who_data = Reduce(function(x,y) merge(x,y , by="country", all = T), who_variables)
+who_data = Reduce(function(x,y) merge(x,y , by="country", all = T),
+                  who_variables)
 ```
 
 Ahora mezclaremos ambas bases de datos a través del nombre del país.
@@ -206,7 +230,8 @@ data$country[is.na(data$iso2c)]
 Con el merge anterior perdimos los datos de 28 países. Tras un análisis de los errores remplazaremos manualmente los valores en la base de datos de *WHO* (considerando que al contener una clave ISO, los nombres más adecuados son los del Banco Mundial), para volver a realizar el merge sin perder países.
 
 ``` r
-# Con estas líneas se análizaron las diferencias de nombres de país entre las dos fuentes
+# Con estas líneas se análizaron las diferencias de nombres de país entre 
+#las dos fuentes
 #who_data[order(who_data$country),] #Valores sin correcto Match
 #wdb_data[order(wdb_data$country),"country"] #Valores posibles
 
@@ -223,7 +248,8 @@ changeNameCountry <- function ( dataFrame, arrayOld, arrayNew ){
 
 # Aplicamos en nuestro set de datos de WHO así como en la variable de regiones
 who_data <- changeNameCountry(who_data, oldCountryNames, newCountryNames);
-region_country <- changeNameCountry(region_country, oldCountryNames, newCountryNames);
+region_country <- changeNameCountry(region_country, oldCountryNames,
+                                    newCountryNames);
 
 # Volvemos a realizar el merge
 data <- merge(wdb_data, who_data, by = "country", all.y= T)
@@ -269,7 +295,8 @@ Buscaremos aquellos países cuyo valor de missing values este presente en por lo
 
 ``` r
 # Obtenemos un mascara booleana de aquellos registros que tiene por lo menos el 60% de las columnas como missing values
-country_nas <- apply(data, 1, function(x) (sum(is.na(x)) / dim(data)[2]) * 100 ) >= 60
+country_nas <- apply(data, 1,
+                     function(x) (sum(is.na(x)) / dim(data)[2]) * 100 ) >= 60
 # Obtenemos 12 países
 sum(country_nas)
 ```
@@ -335,7 +362,11 @@ varWithNa <- colnames(data)[colSums(is.na(data)) > 0]
 for(index in seq(1,length(varWithNa))){
   
  # Obtenemos la media por región
-  actualVarMeanByRegion <- data[!is.na(data[varWithNa[index]]),c("region",varWithNa[index])] %>% group_by(region) %>% dplyr::summarise_all(funs(mean = median))
+  actualVarMeanByRegion <- data[!is.na(data[varWithNa[index]]),
+                                c("region",
+                                  varWithNa[index])] %>%
+                                  group_by(region) %>%
+                                  dplyr::summarise_all(funs(mean = median))
   
   # Obtenemos los índices de las filas con NA para la variable actual
   nAInVar <- rownames(data[is.na(data[varWithNa[index]]),])
@@ -478,7 +509,7 @@ heatmap(R, symm = TRUE)
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-22-2.png)
 
 ``` r
-# Aunque no es fácil percibir las relaciones con ese tamaño, podemos observar algunos patrones.
+# No es fácil percibir las relaciones sin embargo se observan algunos patrones.
 pairs(data[,col_numeric],  pch=20, col = data$region)
 ```
 
@@ -538,7 +569,7 @@ n <- dim(data[,col_numeric])[1]
 p <- dim(data[,col_numeric])[2]
 
 muhat = colMeans(X)
-# Añadimos una tolerencia ya que al ser muy cercanas a 0, la interpreta como matriz singular
+# Añadimos una tolerencia mayor, para que no se interprete como matriz singular
 dM2 <- mahalanobis(X, muhat, S, tol=1e-29)
 
 qqplot(dM2, qchisq(ppoints(n), df = p), xlab="Quantiles de distancia Mahalanobis",
@@ -557,7 +588,8 @@ Debido al comportamiento de nuestras distancias, se puede observar claros Outlie
 par(mfrow=c(3,2))
 
 invisible(sapply(col_numeric, function(x) { 
-  boxplot(data[,x], main= x, col = "#009688", border = "#00897B", horizontal = T)}))
+  boxplot(data[,x], main= x, col = "#009688",
+          border = "#00897B", horizontal = T)}))
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-26-1.png)![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-26-2.png)![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-26-3.png)![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-26-4.png)
@@ -568,7 +600,8 @@ Exploraremos algunos aspectos buscando respuestas respecto al origen de estos Ou
 
 ``` r
 qnt <- quantile(data$SP.POP.TOTL, probs=c(.25, .75))
-outliers <- data[data$SP.POP.TOTL > qnt[2] + 1.5*IQR(data$SP.POP.TOTL),c("country","SP.POP.TOTL")]
+outliers <- data[data$SP.POP.TOTL > qnt[2] + 1.5*IQR(data$SP.POP.TOTL),
+                 c("country","SP.POP.TOTL")]
 outliers[order(outliers$SP.POP.TOTL, decreasing = T),]
 ```
 
@@ -600,7 +633,8 @@ Sí, y todos los países obtenidos están en la lista de los 20 países más pob
 
 ``` r
 qnt <- quantile(data$NV.AGR.TOTL.CD, probs=c(.25, .75))
-outliers <- data[data$NV.AGR.TOTL.CD > qnt[2] + 1.5*IQR(data$NV.AGR.TOTL.CD),c("country","region","NV.AGR.TOTL.CD")]
+outliers <- data[data$NV.AGR.TOTL.CD > qnt[2] + 1.5*IQR(data$NV.AGR.TOTL.CD),
+                 c("country","region","NV.AGR.TOTL.CD")]
 outliers[order(outliers$NV.AGR.TOTL.CD, decreasing = T),]
 ```
 
@@ -642,7 +676,8 @@ Parecen lógico debido a su tamaño territorial y cantidad de población, siendo
 
 ``` r
 qnt <- quantile(data$TX.VAL.FOOD.ZS.UN, probs=c(.25, .75))
-outliers <- data[data$TX.VAL.FOOD.ZS.UN > qnt[2] + 1.5*IQR(data$TX.VAL.FOOD.ZS.UN),c("country","region","TX.VAL.FOOD.ZS.UN")]
+outliers <- data[data$TX.VAL.FOOD.ZS.UN > qnt[2] + 1.5*IQR(data$TX.VAL.FOOD.ZS.UN),
+                 c("country","region","TX.VAL.FOOD.ZS.UN")]
 outliers[order(outliers$TX.VAL.FOOD.ZS.UN, decreasing = T),]
 ```
 
@@ -661,7 +696,8 @@ En este caso resulta complicado corroborar los datos, no fue posible encontrar f
 
 ``` r
 qnt <- quantile(data$ER.MRN.PTMR.ZS, probs=c(.25, .75))
-outliers <- data[data$ER.MRN.PTMR.ZS > qnt[2] + 1.5*IQR(data$ER.MRN.PTMR.ZS),c("country","region","ER.MRN.PTMR.ZS")]
+outliers <- data[data$ER.MRN.PTMR.ZS > qnt[2] + 1.5*IQR(data$ER.MRN.PTMR.ZS),
+                 c("country","region","ER.MRN.PTMR.ZS")]
 #Obtenemos los primero 4 para consultar los países con más áreas marinas protegidas.
 outliers[order(outliers$ER.MRN.PTMR.ZS, decreasing= T),][1:4,]
 ```
@@ -682,7 +718,8 @@ Primeramente transformamos a forma logarítmica algunas variables que debido a s
 
 ``` r
 data_pca = data[,col_numeric]
-data_pca[col_numeric[c(2,3,6,7,9,10,11,13,14,15,16,18,19)]] = log(data[,col_numeric[c(2,3,6,7,9,10,11,13,14,15,16,18,19)]])
+data_pca[col_numeric[c(2,3,6,7,9,10,11,13,14,15,16,18,19)]] = 
+  log(data[,col_numeric[c(2,3,6,7,9,10,11,13,14,15,16,18,19)]])
 ```
 
     ## Warning in FUN(X[[i]], ...): Se han producido NaNs
@@ -729,7 +766,8 @@ Se observa que tomar los primeros 3 componentes sería el más indicado, más ne
 
 ``` r
 par(mar=c(5,10,4,1))
-barplot(pca$rotation[,1], las=2, col="#009688", border = "#00897B", cex.names= .7, cex.axis=.7, horiz=TRUE)
+barplot(pca$rotation[,1], las=2, col="#009688", border = "#00897B",
+        cex.names= .7, cex.axis=.7, horiz=TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-34-1.png)
@@ -744,7 +782,8 @@ A esta componente le llamaremos **Impacto o aporte al calentamiento global**.
 
 ``` r
 par(mar=c(5,10,4,1))
-barplot(pca$rotation[,2], las=2, col="#009688", border = "#00897B", cex.names= .7, cex.axis=.7, horiz=TRUE)
+barplot(pca$rotation[,2], las=2, col="#009688", border = "#00897B",
+        cex.names= .7, cex.axis=.7, horiz=TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-35-1.png)
@@ -759,7 +798,8 @@ A esta componente le llamaremos **Desarrollo sostenible - Economia **.
 
 ``` r
 par(mar=c(5,10,4,1))
-barplot(pca$rotation[,3], las=2, col="#009688" , border = "#00897B", cex.names= .7, cex.axis=.7, horiz=TRUE)
+barplot(pca$rotation[,3], las=2, col="#009688" , border = "#00897B",
+        cex.names= .7, cex.axis=.7, horiz=TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-36-1.png)
@@ -783,10 +823,14 @@ Vamos a visualizar nuestro índice con distintos criterios, buscando encontrar a
 **¿Está nuestro índice asociado por región?**
 
 ``` r
-# Añadimos un pequeño constante y ponemos en forma logaritmica para separales un poco.
-qplot(log(pca$x[,1]+8),log(pca$x[,2]+8),col=data$region,label=data$iso2c, size=I(.1)) + 
-  labs(title="Índice de aporte al calentamiento global", x="Calentamiento Global", y="Población - Economía", color="Region") +
-  theme_bw() + theme(legend.position="bottom") + geom_text(size=2, hjust=.4, vjust=-.4, check_overlap = TRUE)
+# Añadimos una pequeño constante y proyectamos logaritmo para separales un poco.
+qplot(log(pca$x[,1]+8),log(pca$x[,2]+8),col=data$region,
+      label=data$iso2c, size=I(.1)) + 
+  labs(title="Índice de aporte al calentamiento global",
+       x="Calentamiento Global",
+       y="Población - Economía", color="Region") +
+  theme_bw() + theme(legend.position="bottom") +
+  geom_text(size=2, hjust=.4, vjust=-.4, check_overlap = TRUE)
 ```
 
     ## Warning in log(pca$x[, 2] + 8): Se han producido NaNs
@@ -807,10 +851,14 @@ Sí, aún cuando hay casos particulares como lo son China, India y Estados Unido
 
 ``` r
 data.frame(z1=pca$x[,1],z2=data_pca$MH_12) %>% 
-  ggplot(aes(z1,z2,label=data$country,color=data_pca$MH_12)) + geom_point(size=0) +
-  labs(title="Suicidios por calentamiento global", x="Calentamiento global", y="Taza de suicidios", color="Suicidios") +
+  ggplot(aes(z1,z2,label=data$country,color=data_pca$MH_12))+ 
+  geom_point(size=0) +
+  labs(title="Suicidios por calentamiento global",
+       x="Calentamiento global",
+       y="Taza de suicidios", color="Suicidios") +
   scale_color_gradient(low="#C5CAE9", high="#1A237E") +
-  theme_bw() + theme(legend.position="bottom") + geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
+  theme_bw() + theme(legend.position="bottom") +
+  geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-39-1.png)
@@ -821,10 +869,13 @@ No parecen tener una relación clara, los datos **no tienen un patrón claro** q
 
 ``` r
 data.frame(z1=pca$x[,1],z2=data_pca$NY.GDP.PCAP.CD) %>% 
-  ggplot(aes(z1,z2,label=data$country,color=data_pca$NY.GDP.PCAP.CD)) + geom_point(size=0) +
-  labs(title="PIB (Aporte al calentamiento global)", x="Calentamiento global", y="PIB", color="PIB") +
+  ggplot(aes(z1,z2,label=data$country,color=data_pca$NY.GDP.PCAP.CD)) +
+  geom_point(size=0) +
+  labs(title="PIB (Aporte al calentamiento global)",
+       x="Calentamiento global", y="PIB", color="PIB") +
   scale_color_gradient(low="#F8BBD0", high="#880E4F") +
-  theme_bw() + theme(legend.position="bottom") + geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
+  theme_bw() + theme(legend.position="bottom") +
+  geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-40-1.png)
@@ -835,10 +886,14 @@ Podría decirse que sí tiene una relación, el patrón de la relación es muy c
 
 ``` r
 data.frame(z1=pca$x[,1],z2=data_pca$SP.RUR.TOTL.ZS) %>% 
-  ggplot(aes(z1,z2,label=data$country,color=data_pca$SP.RUR.TOTL.ZS)) + geom_point(size=0) +
-  labs(title="Población rural - Calentamiento Global", x="Calentamiento global", y="Población rural", color="Población rural") +
+  ggplot(aes(z1,z2,label=data$country,color=data_pca$SP.RUR.TOTL.ZS)) +
+  geom_point(size=0) +
+  labs(title="Población rural - Calentamiento Global",
+       x="Calentamiento global",
+       y="Población rural", color="Población rural") +
   scale_color_gradient(low="#B2EBF2", high="#006064") +
-  theme_bw() + theme(legend.position="bottom") + geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
+  theme_bw() + theme(legend.position="bottom") +
+  geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-41-1.png)
@@ -849,10 +904,14 @@ No es del todo claro, pero se podría decir que existe una **relación lineal ne
 
 ``` r
 data.frame(z1=pca$x[,1],z2=data_pca$MS.MIL.XPND.GD.ZS) %>% 
-  ggplot(aes(z1,z2,label=data$country,color=data_pca$MS.MIL.XPND.GD.ZS)) + geom_point(size=0) +
-  labs(title="Militarización - Calentamiento Global", x="Calentamiento global", y="Inversión en militarización", color="Militarización") +
+  ggplot(aes(z1,z2,label=data$country,color=data_pca$MS.MIL.XPND.GD.ZS)) +
+  geom_point(size=0) +
+  labs(title="Militarización - Calentamiento Global",
+       x="Calentamiento global",
+       y="Inversión en militarización", color="Militarización") +
   scale_color_gradient(low="#DCEDC8", high="#33691E") +
-  theme_bw() + theme(legend.position="bottom") + geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
+  theme_bw() + theme(legend.position="bottom") +
+  geom_text(size=2, hjust=0.6, vjust=0, check_overlap = TRUE)
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-42-1.png)
@@ -863,7 +922,10 @@ A primera vista pareciera que sí tiene una relación lineal, sin embargo debemo
 
 ``` r
 # Haciendo match entre nuestros datos y los países de representación en el mapa.
-matched <- joinCountryData2Map(data.frame(country=data$country, global=pca$x[,1]), joinCode="NAME", nameJoinColumn="country")
+matched <- joinCountryData2Map(data.frame(country=data$country, 
+                                          global=pca$x[,1]), 
+                               joinCode="NAME", 
+                               nameJoinColumn="country")
 ```
 
     ## 179 codes from your data successfully matched countries in the map
@@ -872,8 +934,11 @@ matched <- joinCountryData2Map(data.frame(country=data$country, global=pca$x[,1]
 
 ``` r
 # Plot del mapa
-mapCountryData(matched, nameColumnToPlot="global", mapTitle="Aporte al calentamiento Global", 
-               catMethod = "pretty", colourPalette = c("#FDEA6F","#F3B355","#E97E3B","#CF4F29","#723C2C"))
+mapCountryData(matched, nameColumnToPlot="global",
+               mapTitle="Aporte al calentamiento Global", 
+               catMethod = "pretty", 
+               colourPalette = c("#FDEA6F","#F3B355",
+                                 "#E97E3B","#CF4F29","#723C2C"))
 ```
 
     ## You asked for 7 categories, 9 were used due to pretty() classification
@@ -893,7 +958,8 @@ Utilizaremos sólo dos factores para buscar su interpretación.
 
 ``` r
 data_factor = data[,col_numeric]
-data.f <- factanal(data_factor, factors = 2, rotation="varimax", scores="regression", lower = 0.01)
+data.f <- factanal(data_factor, factors = 2, rotation="varimax",
+                   scores="regression", lower = 0.01)
 data.f
 ```
 
@@ -989,7 +1055,9 @@ Ahora vamos a gratificar para intentar realizar una interpretación:
 
 ``` r
 par(mar=c(5,10,4,1))
-barplot(data.f$loadings[,1], las=2, col="#009688" , border = "#00897B", cex.names= .7, cex.axis=.7, horiz=TRUE,  xlim = c(-1, 1))
+barplot(data.f$loadings[,1], las=2, col="#009688",
+        border = "#00897B", cex.names= .7, cex.axis=.7,
+        horiz=TRUE,  xlim = c(-1, 1))
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-46-1.png)
@@ -1000,7 +1068,9 @@ Asignarle un nombre es complicado, pero se distingue con claridad la relación a
 
 ``` r
 par(mar=c(5,10,4,1))
-barplot(data.f$loadings[,2], las=2, col="#009688" , border = "#00897B", cex.names= .7, cex.axis=.7, horiz=TRUE,  xlim = c(-1, 1))
+barplot(data.f$loadings[,2], las=2, col="#009688",
+        border = "#00897B", cex.names= .7, cex.axis=.7,
+        horiz=TRUE,  xlim = c(-1, 1))
 ```
 
 ![](indice_calentamiento_global_files/figure-markdown_github/unnamed-chunk-47-1.png)
