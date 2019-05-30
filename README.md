@@ -23,3 +23,13 @@ a derechos básicos.
  #### <a href="analisis_multivariante/indice_calentamiento_global.md">Índice de aporte al calentamiento global por país.</a> 	
 
  Extracción, limpieza y organización de información para la creación de un análisis multivariante detallado con uso de algoritmos __PCA__ y __Factor Analysis__.
+ 
+ 
+ 
+ ### Spark y Spark ML  <code>Python</code>	
+ 
+ ### <a href="spark/"> Predicción de año de una canción - Spotify Dataset</a>
+ 
+Ejemplos prácticos de consultas basadas en __spark core__, __spark sql function__ y __spark sql__ respondiendo a preguntas de negocio.
+
+Generación de modelo de regresión basado en  __RandomForestRegressor__ para la predicción de el año de la canción.
